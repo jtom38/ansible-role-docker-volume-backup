@@ -1,0 +1,6 @@
+
+dvb_container_name:     ''
+dvb_restart_container:  true
+dvb_tmp_backup:          '/tmp/docker/backup'
+dvb_path_backup:         ''
+dvb_backup_volume:      ''

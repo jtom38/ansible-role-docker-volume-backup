@@ -1,0 +1,35 @@
+
+# Get all the containers
+- name: "Get {{ container_name }} info"
+  docker_container_info:
+    name: "{{ container_name }}"
+  register: output
+
+# show debug results when asked
+#- name: Show Mount Points
+#  debug:
+#    msg: "{{ item }}"
+#  loop: "{{ output.container.Mounts }}"
+#  when:
+#    - role_debug == True
+
+- name: Confirm {{ pathBackup }}{{ output.container.Name }} exists
+  file:
+    path: "{{ pathBackup }}{{ output.container.Name }}"
+    state: directory
+
+- name: "Backup container volumes"
+  archive:
+    path: "{{ item.Source }}"
+    dest: "{{ pathTmpBackup }}{{ output.container.Name }}{{ item.Destination }}.gz"
+  register: gz
+  loop: "{{ output.container.Mounts }}"
+  when: 
+    - item.Type == 'bind'
+    - item.Destination == backup_volume
+    - role_debug == False
+  
+- debug:
+    msg: "{{ gz }}"
+
+

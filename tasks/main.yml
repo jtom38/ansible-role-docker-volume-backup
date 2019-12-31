@@ -1,0 +1,73 @@
+
+- name: "Stop {{ dvb_container_name }} for backups"
+  docker_container:
+    name: "{{ dvb_container_name }}"
+    state: stopped
+  when:
+    - dvb_restart_container == True
+
+# Get all the containers
+- name: "Get {{ dvb_container_name }} info"
+  docker_container_info:
+    name: "{{ dvb_container_name }}"
+  register: output
+
+# show debug results when asked
+#- name: Show Mount Points
+#  debug:
+#    msg: "{{ item }}"
+#  loop: "{{ output.container.Mounts }}"
+#  when:
+#    - role_debug == True
+
+- name: "Ensure Temp Backup location exists"
+  file: 
+    path: "{{ dvb_TmpBackup }}/{{ dvb_container_name }}"
+    state: directory
+
+- name: "Confirm {{ dvb_pathBackup }}{{ output.container.Name }} exists"
+  file:
+    path: "{{ dvb_PathBackup }}{{ output.container.Name }}"
+    state: directory
+
+- name: "Backup container volumes"
+  archive:
+    path: "{{ item.Source }}"
+    dest: "{{ dvb_TmpBackup }}{{ output.container.Name }}{{ item.Destination }}.gz"
+  loop: "{{ output.container.Mounts }}"
+  when: 
+    - item.Type == 'bind'
+    - item.Destination == dvb_backup_volume
+
+- name: "Start {{ dvb_container_name }}"
+  docker_container:
+    name: "{{ dvb_container_name }}"
+    state: started
+  when: 
+    - dvb_restart_container == True
+
+- name: "Ensure {{ dvb_PathBackup }}/{{ dvb_container_name }}/ exists"
+  file:
+    path: "{{ dvb_PathBackup }}/{{ dvb_container_name }}/"
+    state: directory
+
+- name: Move backup file
+  copy:
+    src: "{{ dvb_TmpBackup }}/{{ dvb_container_name }}{{ dvb_backup_volume }}.gz"
+    dest: "{{ dvb_PathBackup }}/{{ dvb_container_name }}{{ dvb_backup_volume }}.gz"
+    remote_src: yes
+    backup: true
+
+- name: Remove backup file from local disk
+  file:
+    path: '{{ dvb_TmpBackup }}/{{ dvb_container_name }}{{ dvb_backup_volume }}.gz'
+    state: absent
+
+# TODO Enable docker volume backups.. code is below
+
+# if docker mount use backup-docker-vol.yml
+#- name: "{{ container_name }} backup {{ mount_point }}"
+#  shell: docker run --rm --volumes-from {{ container_name }} -v {{ backup_folder }}:/backup ubuntu bash -c 'cd "{{ mount_point }}" && tar cvf /backup/{{ tar_file }} .'
+
+#- name: "Make backup container"
+#  shell: docker start --name backupContainer -v {{ backup_folder }}:/backup ubuntu 
