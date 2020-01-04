@@ -1,0 +1,11 @@
+---
+- name: start
+  docker_container:
+    name: "{{ dvb_container_name }}"
+    state: started
+
+- name: stop
+  docker_container:
+    name: "{{ dvb_container_name }}"
+    state: stopped
+

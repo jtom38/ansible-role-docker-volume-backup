@@ -1,16 +1,21 @@
 
-- name: "Stop {{ dvb_container_name }} for backups"
-  docker_container:
-    name: "{{ dvb_container_name }}"
-    state: stopped
-  when:
-    - dvb_restart_container == True
+#- name: "Stop {{ dvb_container_name }} for backups"
+#  docker_container:
+#    name: "{{ dvb_container_name }}"
+#    state: stopped
+#  when:
+#    - dvb_restart_container == True
 
 # Get all the containers
 - name: "Get {{ dvb_container_name }} info"
   docker_container_info:
     name: "{{ dvb_container_name }}"
   register: output
+
+- name: "Stop {{ dvb_container_name }} container"
+  docker_container:
+    name: "{{ dvb_container_name }}"
+    state: stopped
 
 # show debug results when asked
 #- name: Show Mount Points
@@ -22,45 +27,47 @@
 
 - name: "Ensure Temp Backup location exists"
   file: 
-    path: "{{ dvb_TmpBackup }}/{{ dvb_container_name }}"
+    path: "{{ dvb_tmp_backup }}/{{ dvb_container_name }}"
     state: directory
 
-- name: "Confirm {{ dvb_pathBackup }}{{ output.container.Name }} exists"
+- name: "Confirm {{ dvb_path_backup }}{{ output.container.Name }} exists"
   file:
-    path: "{{ dvb_PathBackup }}{{ output.container.Name }}"
+    path: "{{ dvb_path_backup }}{{ output.container.Name }}"
     state: directory
 
 - name: "Backup container volumes"
   archive:
     path: "{{ item.Source }}"
-    dest: "{{ dvb_TmpBackup }}{{ output.container.Name }}{{ item.Destination }}.gz"
+    dest: "{{ dvb_tmp_backup }}{{ output.container.Name }}{{ item.Destination }}.gz"
   loop: "{{ output.container.Mounts }}"
   when: 
     - item.Type == 'bind'
     - item.Destination == dvb_backup_volume
+#  notify:
+#    - start
 
 - name: "Start {{ dvb_container_name }}"
   docker_container:
     name: "{{ dvb_container_name }}"
     state: started
-  when: 
-    - dvb_restart_container == True
+#  when: 
+#    - dvb_restart_container == True
 
-- name: "Ensure {{ dvb_PathBackup }}/{{ dvb_container_name }}/ exists"
+- name: "Ensure {{ dvb_path_backup }}/{{ dvb_container_name }}/ exists"
   file:
-    path: "{{ dvb_PathBackup }}/{{ dvb_container_name }}/"
+    path: "{{ dvb_path_backup }}/{{ dvb_container_name }}/"
     state: directory
 
 - name: Move backup file
   copy:
-    src: "{{ dvb_TmpBackup }}/{{ dvb_container_name }}{{ dvb_backup_volume }}.gz"
-    dest: "{{ dvb_PathBackup }}/{{ dvb_container_name }}{{ dvb_backup_volume }}.gz"
+    src: "{{ dvb_tmp_backup }}/{{ dvb_container_name }}{{ dvb_backup_volume }}.gz"
+    dest: "{{ dvb_path_backup }}/{{ dvb_container_name }}{{ dvb_backup_volume }}.gz"
     remote_src: yes
     backup: true
 
 - name: Remove backup file from local disk
   file:
-    path: '{{ dvb_TmpBackup }}/{{ dvb_container_name }}{{ dvb_backup_volume }}.gz'
+    path: '{{ dvb_tmp_backup }}/{{ dvb_container_name }}{{ dvb_backup_volume }}.gz'
     state: absent
 
 # TODO Enable docker volume backups.. code is below

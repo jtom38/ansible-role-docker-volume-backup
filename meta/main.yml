@@ -1,12 +1,12 @@
 galaxy_info:
   role_name: docker_volume_backup
   author: luther38
-  description: Helpful method of backing up docker volumes
+  description: Helpful method of backing up docker data
   #company: your company (optional)
 
   # If the issue tracker for your role is not on github, uncomment the
   # next line and provide a value
-  issue_tracker_url: http://github.com/luther38/docker_volume_backup/issues
+  issue_tracker_url: https://github.com/luther38/ansible-role-docker-volume-backup/issues
 
   # Some suggested licenses:
   # - BSD (default)

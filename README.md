@@ -76,14 +76,11 @@ dvb_restart_container: bool
     - include_role:
         name: luther38.docker_volume_backup
 
-
-
-
 ```
 
 ## Requirements.yml
 
-As this repo is not published in galaxy and might never be.  You will need to either clone or add these lines to your requirements.yml file.
+This repo is not published in galaxy and might never be.  To use this role you will need to either clone or add these lines to your requirements.yml file.
 
 ``` yml
 
